@@ -1,0 +1,29 @@
+/**
+ * Created by harsh on 15/12/16.
+ */
+
+var webpack = require('webpack'),
+    path = require('path');
+
+module.exports = {
+    debug: true,
+    entry: {
+        main: './app.js'
+    },
+    output: {
+        filename: 'bundle.js'
+    },
+    module: {
+        loaders: [ {
+            test: /\.jsx?$/,
+            loader: 'babel',
+            exclude: /node_modules/,
+
+            query: {
+                cacheDirectory: true,
+                presets: ['react', 'es2015']
+            }
+        }]
+    }
+
+};
