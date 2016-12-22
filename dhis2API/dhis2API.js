@@ -36,7 +36,8 @@ APIx.dhis2API = function(){
             }else{
                 var schemas = response.schemas;
                 addFields(schemaNameToObjectMap,schemas);
-                debugger
+                APIx.schemaNameToObjectMap = schemaNameToObjectMap;
+
             }
 
             function addFields(schemaNameToObjectMap,schemas){
