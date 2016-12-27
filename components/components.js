@@ -5,23 +5,13 @@
 import React from 'react';
 
 
-export class UploadFile extends React.Component{
-
-    constructor(props) {
-        super(props);
-        this.state = {
-
-        };
-    }
-        foo(){debugger}
-
-        render () {
-            return (
+export function UploadFile(props){
+        return (
                 <div>
                     <label>Upload .xlsx or .csv file</label>
                     <input type="file" id="fileInput"/>
-                    <button onClick={this.foo}>Import</button>
+                    <button onClick={props.onClick}>Import</button>
                 </div>
             )
-        }
-    }
+}
+

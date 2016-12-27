@@ -13,6 +13,13 @@ module.exports = {
     output: {
         filename: 'bundle.js'
     },
+    node:{
+      fs:'empty'
+    },
+    externals: [
+        {'./cptable':'var cptable'},
+        {'./jszip':'jszip'}
+    ],
     module: {
         loaders: [ {
             test: /\.jsx?$/,

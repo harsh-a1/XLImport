@@ -5,22 +5,22 @@
 
 var ajaXwrapper = function(){
 
-    this.$ = require('jquery');
+    var $ = require('jquery');
 
-}
+    this.request = function(param,callback){
+        param.success = success;
+        param.error = error;
+        $.ajax(param);
 
-ajaXwrapper.prototype.request = function(param,callback){
-    param.success = success;
-    param.error = error;
-    this.$.ajax(param);
+        function success(response){
+            callback(null,response);
+        }
 
-    function success(response){
-        callback(null,response);
+        function error(response){
+            callback(true,response);
+        }
     }
 
-    function error(response){
-        callback(true,response);
-    }
 }
 
 module.exports = new ajaXwrapper();
