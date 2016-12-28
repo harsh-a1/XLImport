@@ -39,7 +39,7 @@ APIx.dhis2API = function(){
             addFields(schemaNameToObjectMap,CONSTANTS.schemas_extended);
             makeMaps(schemaNameToObjectMap);
             APIx.schemaNameToObjectMap = schemaNameToObjectMap;
-            debugger
+
         }
 
         function addFields(schemaNameToObjectMap,schemas){
@@ -62,7 +62,6 @@ APIx.dhis2API = function(){
         }
 
         function makeMaps(schemaNameToObjectMap){
-
             for (var key in schemaNameToObjectMap){
                 schemaNameToObjectMap[key].fieldsNameToObjectMap = utility
                     .prepareIdToObjectMap(schemaNameToObjectMap[key]

@@ -12,5 +12,15 @@ _.prepareIdToObjectMap = function(object,id){
     return map;
 }
 
+_.prepareMapGroupedById= function(object,id){
+    var map = [];
+    for (var i=0;i<object.length;i++){
+        if (!map[object[i][id]]){
+            map[object[i][id]] = [];
+        }
+        map[object[i][id]].push(object[i]);
+    }
+    return map;
+}
 
 module.exports = _;

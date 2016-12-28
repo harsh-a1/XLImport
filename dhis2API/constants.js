@@ -14,6 +14,29 @@ export var schemas_extended = {
                                     writable:true
 
                                 }]
+    },
+    event : {
+                                name : "event",
+                                properties : [{
+                                    collection:false,
+                                    fieldName:"eventDate",
+                                    propertyType:"DATE",
+                                    required:true,
+                                    simple:true,
+                                    writable:true
+                                }]
+
+    },
+    enrollment : {
+                                name  : "enrollment",
+                                properties : [{
+                                    collection:false,
+                                    fieldName:"program",
+                                    propertyType:"REFERENCE",
+                                    required:true,
+                                    simple:true,
+                                    writable:true
+                                }]
     }
 }
 

@@ -9,8 +9,8 @@ import $ from 'jquery';
 import XLSX from 'xlsx';
 import * as CONSTANTS from './#/constants';
 import tagParser from './#/tag-parser';
-
 import {UploadFile} from './components/components';
+var utility = require('./utility-functions');
 
 $('document').ready(function(){
     ReactDOM.render(<UploadFile onClick={uploadFileHandler}/>, document.getElementById('container'));
@@ -53,9 +53,9 @@ function parseExcel(file){
         var metadata_sheet = XLSX.utils.sheet_to_json(wb.Sheets[CONSTANTS.METADATA_SHEETNAME]);
         var parser = new tagParser();
 
-        var headerRow = parser.parseList(get_header_row(wb.Sheets[CONSTANTS.DATA_SHEETNAME]));
+        var parsed = parser.parseList(get_header_row(wb.Sheets[CONSTANTS.DATA_SHEETNAME]));
+        prepareForImport(parsed,data_sheet);
 
-        debugger
     };
 
     function get_header_row(sheet) {
@@ -77,4 +77,31 @@ function parseExcel(file){
     }
 }
 
+function prepareForImport(parsed,data){
+    var importMap = {
+        case_single_sheet :{
+                            trackedEntityInstance : [],
+                            enrollment : [],
+                            event : []
+        },
+        case_default : [],
+        case_delete : []
+    };
 
+        var headersMapGrpByDomain = utility.prepareMapGroupedById(parsed.headers,"domain_key");
+
+        for (var key in headersMapGrpByDomain){
+            var domain_obj = headersMapGrpByDomain[key];
+
+            if (parsed.inline){
+                if (key == "trackedEntityInstance"){
+                    importMap.case_single_sheet[key] = domain_obj;
+                }else{
+                    importMap.case_single_sheet[domain_obj[0].domain][key] = domain_obj;
+                }
+            }else{
+                importMap.case_default[key] = domain_obj;
+            }
+        }
+ debugger
+}
