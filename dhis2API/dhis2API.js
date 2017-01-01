@@ -12,8 +12,10 @@ APIx.dhis2API = function(){
     var utility = require('../utility-functions');
     var Promise = require('bluebird');
     var CONSTANTS = require('./constants');
+
     var baseURL = "../../";
     var schemaNameToObjectMap = [];
+    var ROOT_OU_UID = undefined;
 
     if (!APIx.schemaNameToObjectMap){
         init();
@@ -22,11 +24,25 @@ APIx.dhis2API = function(){
     }
 
     function init() {
+
+        ajax.request( {
+            type: "GET",
+            async: true,
+            contentType: "application/json",
+            url: baseURL + '../../organisationUnits?level=1&fields=id,name'
+        }, function(error,response){
+            if (error){
+                console.log("root ou error");
+            }else{
+                ROOT_OU_UID = response.organisationUnits[0].id;
+            }
+        });
+
         ajax.request( {
                 type: "GET",
                 async: true,
                 contentType: "application/json",
-                url: baseURL + 'schemas?fields=name,properties[fieldName,required,simple,writable,propertyType,collection]'
+                url: baseURL + 'schemas?fields=name,relativeApiEndpoint,apiEndpoint,properties[fieldName,required,simple,writable,propertyType,collection]'
             }, populateSchemaMaps);
     }
 
@@ -35,30 +51,26 @@ APIx.dhis2API = function(){
 
         }else{
             var schemas = response.schemas;
-            addFields(schemaNameToObjectMap,schemas);
-            addFields(schemaNameToObjectMap,CONSTANTS.schemas_extended);
-            makeMaps(schemaNameToObjectMap);
+            schemaNameToObjectMap = buildSchemaMap(schemas,CONSTANTS.schemas_extended);
             APIx.schemaNameToObjectMap = schemaNameToObjectMap;
-
         }
 
-        function addFields(schemaNameToObjectMap,schemas){
+        function buildSchemaMap(_schemas,extendedSchema){
 
-            for (var key in schemas){
+            var merge = require('deepmerge');
 
-                if (!schemaNameToObjectMap[schemas[key].name]){
-                    schemaNameToObjectMap[schemas[key].name]={};
-                    schemaNameToObjectMap[schemas[key].name].fields = [];
+            var schemas = {};
+            for (var key in _schemas){
+                var properties = {};
+                for (var pKey in _schemas[key].properties){
+                    properties[_schemas[key].properties[pKey].fieldName] = _schemas[key].properties[pKey];
                 }
 
-                for (var i=0;i<schemas[key].properties.length;i++){
-                    var property = schemas[key].properties[i];
-
-                    if (property.writable &&/*TODO && condition because of array[filter] issue */ schemaNameToObjectMap[schemas[key].name].fields){
-                      schemaNameToObjectMap[schemas[key].name].fields.push(property);
-                    }
-                }
+                _schemas[key].properties = properties;
+                schemas[_schemas[key].name] = _schemas[key];
             }
+
+            return merge(schemas,extendedSchema);
         }
 
         function makeMaps(schemaNameToObjectMap){
@@ -70,8 +82,66 @@ APIx.dhis2API = function(){
         }
     }
 
+    this.saveOrUpdate = function(obj,callback){
+debugger
+    }
+
+    this.getCustomObject = function(_retriever,...args){
+        if (this[_retriever]){
+            this[_retriever](...args);
+        }
+    }
+
     this.getSchemaNameToObjectMap = function(){
         return schemaNameToObjectMap;
+    }
+
+    this.getEndPointByDomain = function(domain){
+        return schemaNameToObjectMap[domain].apiEndpoint;
+    }
+
+    this.getTEIByAttr = function(domain,attruid,value){
+        ajax.request({
+            type: "GET",
+            async: true,
+            contentType: "application/json",
+            url: this.getEndPointByDomain(domain)+'ou='+ROOT_OU_UID+'&ouMode=DESCENDANTS&filter='+attruid+':eq:'+value
+        },callback);
+
+        function callback(error, response, body){
+            if (error){
+                args.afterThat(true,null);
+            }else{
+
+                var tei = undefined;
+                if (response[domain+'s'].length>0){
+                    tei = response[domain+'s'][0];
+                }
+                args.afterThat(null,tei.trackedEntityInstance,tei);
+            }
+        }
+    }
+    this.getObjByField = function(args,domain,fieldName,fieldValue){
+
+        ajax.request({
+            type: "GET",
+            async: true,
+            contentType: "application/json",
+            url: this.getEndPointByDomain(domain)+'?filter='+fieldName+':eq:'+fieldValue
+        },callback);
+
+        function callback(error, response, body){
+            if (error){
+                args.afterThat(true,null);
+            }else{
+                var uid = undefined;
+                if (response[domain+'s'].length>0){
+                    uid = response[domain+'s'][0].id;
+                }
+                args.afterThat(null,uid);
+            }
+
+        }
     }
 }
 

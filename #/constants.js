@@ -20,5 +20,6 @@ export const ALIAS_FIELDS = {
     te : "trackedEntity",
     ou : "organisationUnit",
     attr : "attributes",
+    teAttr : "trackedEntityAttribute",
     prg : "program"
 }

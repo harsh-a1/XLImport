@@ -3,40 +3,51 @@
  */
 
 export var schemas_extended = {
-    trackedEntityInstance : {
-                                name : "trackedEntityInstance",
-                                properties : [{
-                                    collection:true,
-                                    fieldName:"attributes",
-                                    propertyType:"IDENTIFIER",
-                                    required:false,
-                                    simple:true,
-                                    writable:true
-
-                                }]
+    trackedEntityInstance: {
+        name: "trackedEntityInstance",
+        properties: {
+            attributes: {
+                collection: true,
+                propertyType: "CUSTOM_TEIATTR",
+                required: false,
+                simple: true,
+                writable: true,
+                apiSchema : {
+                    key : "attribute",
+                    value : "value"
+                }
+            },
+            organisationUnit: {
+                apiAlias: "orgUnit"
+            }
+        }
     },
-    event : {
-                                name : "event",
-                                properties : [{
-                                    collection:false,
-                                    fieldName:"eventDate",
-                                    propertyType:"DATE",
-                                    required:true,
-                                    simple:true,
-                                    writable:true
-                                }]
-
+    event: {
+        name: "event",
+        properties: {
+            eventDate: {
+                collection: false,
+                fieldName: "eventDate",
+                propertyType: "DATE",
+                required: true,
+                simple: true,
+                writable: true
+            }
+        }
     },
-    enrollment : {
-                                name  : "enrollment",
-                                properties : [{
-                                    collection:false,
-                                    fieldName:"program",
-                                    propertyType:"REFERENCE",
-                                    required:true,
-                                    simple:true,
-                                    writable:true
-                                }]
+    enrollment: {
+        name: "enrollment",
+        properties: {
+            program: {
+                collection: false,
+                fieldName: "program",
+                propertyType: "REFERENCE",
+                required: true,
+                simple: true,
+                writable: true
+            }
+        }
     }
 }
+
 

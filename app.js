@@ -9,6 +9,7 @@ import $ from 'jquery';
 import XLSX from 'xlsx';
 import * as CONSTANTS from './#/constants';
 import tagParser from './#/tag-parser';
+import {importHandler} from './#/import-handler';
 import {UploadFile} from './components/components';
 var utility = require('./utility-functions');
 
@@ -54,6 +55,8 @@ function parseExcel(file){
         var parser = new tagParser();
 
         var parsed = parser.parseList(get_header_row(wb.Sheets[CONSTANTS.DATA_SHEETNAME]));
+
+        importHandler(parsed,data_sheet);
         prepareForImport(parsed,data_sheet);
 
     };
