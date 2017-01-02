@@ -29,7 +29,7 @@ APIx.dhis2API = function(){
             type: "GET",
             async: true,
             contentType: "application/json",
-            url: baseURL + '../../organisationUnits?level=1&fields=id,name'
+            url: baseURL + '/organisationUnits?level=1&fields=id,name'
         }, function(error,response){
             if (error){
                 console.log("root ou error");
@@ -82,8 +82,34 @@ APIx.dhis2API = function(){
         }
     }
 
-    this.saveOrUpdate = function(obj,callback){
-debugger
+    this.saveOrUpdate = function(args,domain,uid,apiObject){
+
+        if (uid){
+            args.operation = CONSTANTS.OP_ADD_UPDATE_OVERWRITE;
+                ajax.request({
+                    type: "PUT",
+                    async: true,
+                    contentType: "application/json",
+                    data : JSON.stringify(apiObject),
+                    url: "../../"+domain+"s/"+uid
+                },callback);
+
+        }else{
+            args.operation = CONSTANTS.OP_ADD;
+
+            ajax.request({
+                type: "POST",
+                async: true,
+                contentType: "application/json",
+                data : JSON.stringify(apiObject),
+                url: "../../"+domain+"s"
+            },callback);
+        }
+
+        function callback(error,response,body){debugger
+            args.then(error,response,body,args);
+        }
+
     }
 
     this.getCustomObject = function(_retriever,...args){
@@ -91,6 +117,8 @@ debugger
             this[_retriever](...args);
         }
     }
+
+    this.CONSTANTS = CONSTANTS;
 
     this.getSchemaNameToObjectMap = function(){
         return schemaNameToObjectMap;
@@ -100,12 +128,12 @@ debugger
         return schemaNameToObjectMap[domain].apiEndpoint;
     }
 
-    this.getTEIByAttr = function(domain,attruid,value){
+    this.getTEIByAttr = function(args,attruid,value){
         ajax.request({
             type: "GET",
             async: true,
             contentType: "application/json",
-            url: this.getEndPointByDomain(domain)+'ou='+ROOT_OU_UID+'&ouMode=DESCENDANTS&filter='+attruid+':eq:'+value
+            url: "../../trackedEntityInstances?"+'ou='+ROOT_OU_UID+'&ouMode=DESCENDANTS&filter='+attruid+':eq:'+value
         },callback);
 
         function callback(error, response, body){
@@ -113,11 +141,11 @@ debugger
                 args.afterThat(true,null);
             }else{
 
-                var tei = undefined;
-                if (response[domain+'s'].length>0){
-                    tei = response[domain+'s'][0];
+                var uid = undefined;
+                if (response.trackedEntityInstances.length>0){
+                    uid = response.trackedEntityInstances[0].trackedEntityInstance;
                 }
-                args.afterThat(null,tei.trackedEntityInstance,tei);
+                args.afterThat(null,uid,response.trackedEntityInstances[0]);
             }
         }
     }

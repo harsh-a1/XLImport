@@ -52,8 +52,6 @@ function tagParser(){
 
             var modifiers = [];
 
-            if (!field){ return null }
-
             if (field.indexOf('[') != -1) {
                 whole = field.split('[');
 
@@ -66,12 +64,14 @@ function tagParser(){
             }
 
              field = getValidField(domain.name,field);
+            if (!field){ return null }
 
             return {
                 key : tag,
                 domain : domain.name,
-                field : field,
+                field : field.name,
                 args : args,
+                property : field.property,
                 modifiers : modifiers,
                 inline_index : domain.index,
                 domain_key : domain.name + (domain.index?domain.index:"")
@@ -113,7 +113,7 @@ function tagParser(){
         var DOMAIN = SNOM[domain];
 
         if (DOMAIN.properties[field]){
-            return field;
+            return {name : field,property : DOMAIN.properties[field]}
         }
 
         return false;
@@ -125,27 +125,33 @@ function tagParser(){
 }
 
 function tagRetriever(args,headers,data){
-    var SNOM = this.getSchemaNameToObjectMap();
-    var property;
     var obj = {};
     var domainObj;
 
     retrieve(0,headers);
-    function retrieve(key,headers){debugger
+    function retrieve(key,headers){
         if (key == headers.length){
-            test = {domain : headers[0].domain,apiObj:obj,domainObj : domainObj};
-            debugger
+            args.afterThat(null,{domain : headers[0].domain,apiObj:obj,domainObj : domainObj});
+            return;
         }
-        var property = SNOM[headers[key].domain].properties[headers[key].field];
+        var property = headers[key].property;
         var value = headers[key].args?headers[key].args : data[headers[key].key];
+        var dataValue = data[headers[key].key];
 
         modifierOperations({
             afterThat : extractValues
-        },property,headers[key],value);
+        },property,headers[key],value,dataValue);
 
         function extractValues(error,uid,mObj){
-            domainObj = mObj;
-            headers[key].args = uid;
+            if (error){
+                console.log("possible lookup error");
+            }
+
+            if (uid){
+                value = uid;
+                domainObj = mObj;
+            }
+
             if (property.collection){
 
                 if (!obj[property.fieldName]){
@@ -160,16 +166,13 @@ function tagRetriever(args,headers,data){
             }else{
                 switch(property.propertyType){
                     case "REFERENCE" :
+                    default :
                         if (property.apiAlias){
                             obj[property.apiAlias] = value;
                         }else{
                             obj[property.fieldName] = value;
                         }
                         break;
-
-                    case "" :
-
-                    default :
                 }
             }
 
@@ -178,10 +181,10 @@ function tagRetriever(args,headers,data){
 
     }
 
-    function modifierOperations(args,property,header,value){
+    function modifierOperations(args,property,header,value,dataValue){
 
         if (header.modifiers.length == 0){
-            args.afterThat(true);
+            default_call(null,null,null);
         }else{
             for (var key in header.modifiers){
                 var modifier = header.modifiers[key];
@@ -194,11 +197,15 @@ function tagRetriever(args,headers,data){
 
                 if (modifier == "lookup"){
                     lookupObj();
+                }else{
+                    default_call(null,null,null)
                 }
-
             }
         }
 
+        function default_call(error,response,body){
+            args.afterThat(error,response,body);
+        }
         function lookupObj(){
 
             if (property.propertyType == "REFERENCE"){
@@ -210,7 +217,7 @@ function tagRetriever(args,headers,data){
             }else if (property.propertyType == "CUSTOM_TEIATTR"){
                 api.getTEIByAttr({
                     afterThat : args.afterThat
-                },header.domain,value);
+                },value,dataValue);
             }
 
         }
