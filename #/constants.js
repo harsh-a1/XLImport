@@ -22,5 +22,20 @@ export const ALIAS_FIELDS = {
     ou : "organisationUnit",
     attr : "attributes",
     teAttr : "trackedEntityAttribute",
-    prg : "program"
+    prg : "program",
+    ps : "programStage"
+}
+
+export const ALIAS_DOMAIN_WISE_FIELDS = {
+    event : {
+        de : "dataValues",
+        tei : "trackedEntityInstance"
+    },
+    trackedEntityInstance : {
+        attr : "attributes"
+    },
+    enrollment : {
+        tei : "trackedEntityInstance"
+    }
+
 }

@@ -105,18 +105,24 @@ function tagParser(){
     }
 
     function getValidField(domain,field){
-
+        var _field = field;
         if (CONSTANTS.ALIAS_FIELDS[field]){
-            field = CONSTANTS.ALIAS_FIELDS[field];
+            _field = CONSTANTS.ALIAS_FIELDS[field];
+        }
+
+        if (CONSTANTS.ALIAS_DOMAIN_WISE_FIELDS[domain]){
+            if (CONSTANTS.ALIAS_DOMAIN_WISE_FIELDS[domain][field]){
+                _field = CONSTANTS.ALIAS_DOMAIN_WISE_FIELDS[domain][field];
+            }
         }
 
         var DOMAIN = SNOM[domain];
 
-        if (DOMAIN.properties[field]){
-            return {name : field,property : DOMAIN.properties[field]}
+        if (DOMAIN.properties[_field]){
+            return {name : _field,property : DOMAIN.properties[_field]}
         }
 
-        return false;
+       return false;
     }
 
     this.getRetriever = function(){
@@ -208,16 +214,19 @@ function tagRetriever(args,headers,data){
         }
         function lookupObj(){
 
-            if (property.propertyType == "REFERENCE"){
-
-                api.getObjByField({
+            switch(property.propertyType){
+                case "REFERENCE" :
+                    api.getObjByField({
                     afterThat : args.afterThat
                 },header.field,modifierArgs,value);
-
-            }else if (property.propertyType == "CUSTOM_TEIATTR"){
-                api.getTEIByAttr({
-                    afterThat : args.afterThat
-                },value,dataValue);
+                    break;
+                case "CUSTOM_TEIATTR" :
+                    api.getTEIByAttr({
+                        afterThat : args.afterThat
+                    },value,dataValue);
+                    break;
+                default :
+                    args.afterThat(null,null,null);
             }
 
         }

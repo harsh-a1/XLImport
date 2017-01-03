@@ -37,7 +37,70 @@ export var schemas_extended = {
                 required: true,
                 simple: true,
                 writable: true
+            },
+            created: {
+                collection: false,
+                fieldName: "created",
+                propertyType: "DATE",
+                required: false,
+                simple: true,
+                writable: true
+            },
+            organisationUnit: {
+                collection: false,
+                fieldName: "organisationUnit",
+                propertyType: "REFERENCE",
+                required: true,
+                simple: true,
+                writable: true,
+                apiAlias: "orgUnit"
+            },
+            trackedEntityInstance: {
+                collection: false,
+                fieldName: "trackedEntityInstance",
+                propertyType: "REFERENCE",
+                required: true,
+                simple: true,
+                writable: true
+            },
+            dataValues: {
+                fieldName : "dataValues",
+                collection: true,
+                propertyType: "TRACKER_DE",
+                required: false,
+                simple: true,
+                writable: true,
+                apiSchema : {
+                    key : "dataElement",
+                    value : "value"
+                }
+            },
+            program: {
+                collection: false,
+                fieldName: "program",
+                propertyType: "REFERENCE",
+                required: true,
+                simple: true,
+                writable: true
+            },
+            programStage: {
+                fieldName : "programStage",
+                collection: false,
+                propertyType: "REFERENCE",
+                required: false,
+                simple: true,
+                writable: true,
+
+            },
+            complete: {
+                collection: false,
+                fieldName: "complete",
+                propertyType: "BOOLEAN",
+                required: false,
+                simple: true,
+                writable: true
             }
+
         }
     },
     enrollment: {
@@ -55,6 +118,23 @@ export var schemas_extended = {
                 collection: false,
                 fieldName: "enrollmentDate",
                 propertyType: "DATE",
+                required: true,
+                simple: true,
+                writable: true
+            },
+            organisationUnit: {
+                collection: false,
+                fieldName: "organisationUnit",
+                propertyType: "REFERENCE",
+                required: true,
+                simple: true,
+                writable: true,
+                apiAlias: "orgUnit"
+            },
+            trackedEntityInstance: {
+                collection: false,
+                fieldName: "trackedEntityInstance",
+                propertyType: "REFERENCE",
                 required: true,
                 simple: true,
                 writable: true

@@ -72,31 +72,9 @@ APIx.dhis2API = function(){
 
             return merge(schemas,extendedSchema);
         }
-
-        function makeMaps(schemaNameToObjectMap){
-            for (var key in schemaNameToObjectMap){
-                schemaNameToObjectMap[key].fieldsNameToObjectMap = utility
-                    .prepareIdToObjectMap(schemaNameToObjectMap[key]
-                        .fields, "fieldName");
-            }
-        }
     }
 
-    this.saveOrUpdate = function(args,domain,uid,apiObject){
-
-        if (uid){
-            args.operation = CONSTANTS.OP_ADD_UPDATE_OVERWRITE;
-                ajax.request({
-                    type: "PUT",
-                    async: true,
-                    contentType: "application/json",
-                    data : JSON.stringify(apiObject),
-                    url: "../../"+domain+"s/"+uid
-                },callback);
-
-        }else{
-            args.operation = CONSTANTS.OP_ADD;
-
+    this.save = function(domain,apiObject,_callback){
             ajax.request({
                 type: "POST",
                 async: true,
@@ -104,14 +82,30 @@ APIx.dhis2API = function(){
                 data : JSON.stringify(apiObject),
                 url: "../../"+domain+"s"
             },callback);
-        }
 
-        function callback(error,response,body){debugger
-            args.then(error,response,body,args);
+        function callback(error,response,body){
+            _callback(error,response,body);
         }
 
     }
 
+    this.update = function(domain,uid,apiObject,_callback){
+        if (uid){
+            ajax.request({
+                type: "PUT",
+                async: true,
+                contentType: "application/json",
+                data : JSON.stringify(apiObject),
+                url: "../../"+domain+"s/"+uid
+            },callback);
+
+        }
+
+        function callback(error,response,body){
+           _callback(error,response,body);
+        }
+
+    }
     this.getCustomObject = function(_retriever,...args){
         if (this[_retriever]){
             this[_retriever](...args);
@@ -171,6 +165,78 @@ APIx.dhis2API = function(){
 
         }
     }
+
+     this.getConflicts = function(response){
+
+        if (response.responseText){
+
+            if (!isJson(response.responseText))
+                return ([{object:"Unexpected Error Occurred",value:response.responseText}]);
+
+            var jsonRT = JSON.parse(response.responseText);
+
+            if (jsonRT.response){
+                if (jsonRT.response.conflicts){
+                    return jsonRT.response.conflicts;
+                }
+                if (jsonRT.response.importSummaries[0].conflicts){
+                    return jsonRT.response.importSummaries[0].conflicts;
+                }
+                if (jsonRT.response.importSummaries[0].status == "ERROR"){
+                    return ([{object:jsonRT.response.importSummaries[0].description,value:""}]);
+                }
+            }
+        }else{
+            if (response.httpStatus){
+                if (response.httpStatus.response)
+                    if (response.httpStatus.response.conflicts){
+                        return response.httpStatus.response.conflicts;
+                    }
+            }
+        }
+
+        if (response.conflicts)
+            return response.conflicts;
+
+        if (response.importConflicts)
+            return response.importConflicts;
+
+        return false;
+    }
+
+     this.findReference = function(response){
+
+        if (response.response){
+
+            if (response.response.reference){
+                return response.response.reference;
+            }
+
+            if (response.response.importSummaries ){
+                if (response.response.importSummaries[0].reference)
+                    return response.response.importSummaries[0].reference;
+            }
+        }
+
+        if (response.lastImported){
+            return response.lastImported;
+        }
+        return "";
+    }
+
+    this.findStatus = function(response){
+
+        if (response.statusText){
+            return response.statusText
+        }
+
+        if (response.status){
+            return response.status
+        }
+
+        return "";
+    }
+
 }
 
 

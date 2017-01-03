@@ -11,10 +11,23 @@ import * as CONSTANTS from './#/constants';
 import tagParser from './#/tag-parser';
 import {importHandler} from './#/import-handler';
 import {UploadFile} from './components/components';
+import {ImportSummaryTable} from './components/components';
+
 var utility = require('./utility-functions');
+import dhis2API from './dhis2API/dhis2API';
+
+var api = new dhis2API();
+
+var importSummary = {};
+var requestStats = {
+    requestCount : 0,
+    successCount : 0,
+    errorCount : 0
+};
 
 $('document').ready(function(){
     ReactDOM.render(<UploadFile onClick={uploadFileHandler}/>, document.getElementById('container'));
+
 });
 
 function uploadFileHandler(){
@@ -56,8 +69,7 @@ function parseExcel(file){
 
         var parsed = parser.parseList(get_header_row(wb.Sheets[CONSTANTS.DATA_SHEETNAME]));
 
-        importHandler(parsed,data_sheet);
-        prepareForImport(parsed,data_sheet);
+        importHandler(parsed,data_sheet,notificationCallback);
 
     };
 
@@ -80,31 +92,76 @@ function parseExcel(file){
     }
 }
 
-function prepareForImport(parsed,data){
-    var importMap = {
-        case_single_sheet :{
-                            trackedEntityInstance : [],
-                            enrollment : [],
-                            event : []
-        },
-        case_default : [],
-        case_delete : []
-    };
+function notificationCallback(error,response,header,index){
 
-        var headersMapGrpByDomain = utility.prepareMapGroupedById(parsed.headers,"domain_key");
+    var importStat = {};
 
-        for (var key in headersMapGrpByDomain){
-            var domain_obj = headersMapGrpByDomain[key];
+    var summaryItem = {};
+    summaryItem.domain = header.domain;
+    console.log(response.status );
+    var conflicts = api.getConflicts(response);
+    var reference = api.findReference(response);
+    summaryItem.reference = reference;
+    summaryItem.conflicts = conflicts;
 
-            if (parsed.inline){
-                if (key == "trackedEntityInstance"){
-                    importMap.case_single_sheet[key] = domain_obj;
-                }else{
-                    importMap.case_single_sheet[domain_obj[0].domain][key] = domain_obj;
-                }
-            }else{
-                importMap.case_default[key] = domain_obj;
+    if (response.status == "OK") {
+        summaryItem.httpResponse = response;
+        requestStats.successCount = requestStats.successCount + 1;
+    }else{
+        if (response.responseText){
+            if (isJson(response.responseText)){
+                summaryItem.httpResponse = JSON.parse(response.responseText);
+                requestStats.errorCount = requestStats.errorCount+1;
             }
         }
- debugger
+    }
+
+    summaryItem.status = api.findStatus(response);
+    summaryItem.row = index;
+
+    /* case for datavalue sets */
+    if (response.dataSetComplete){
+        if (response.conflicts){
+            summaryItem.status = "Conflict";
+            requestStats.errorCount = requestStats.errorCount+1;
+        }else{
+            summaryItem.httpResponse = response;
+            requestStats.successCount = requestStats.successCount + 1;
+        }
+
+    }
+
+    if (!importSummary[index]){
+        importSummary[index] = [];
+        // importSummaryMap[importStat.index] = importSummary[importStat.index];
+        importSummary[index].push(summaryItem);
+    }else{
+        importSummary[index].push(summaryItem);
+    }
+
+    requestStats.requestCount = requestStats.requestCount+1;
+    ReactDOM.render(<ImportSummaryTable data={importSummary}/>, document.getElementById('dataTable'));
+
+    debugger
+
+}
+
+//http://stackoverflow.com/questions/9804777/how-to-test-if-a-string-is-json-or-not
+//http://stackoverflow.com/users/3119662/kubosho
+function isJson(item) {
+    item = typeof item !== "string"
+        ? JSON.stringify(item)
+        : item;
+
+    try {
+        item = JSON.parse(item);
+    } catch (e) {
+        return false;
+    }
+
+    if (typeof item === "object" && item !== null) {
+        return true;
+    }
+
+    return false;
 }
