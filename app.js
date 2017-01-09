@@ -5,6 +5,7 @@
 
 import React from 'react';
 import ReactDOM from 'react-dom';
+
 import $ from 'jquery';
 import XLSX from 'xlsx';
 import * as CONSTANTS from './#/constants';
@@ -12,6 +13,7 @@ import tagParser from './#/tag-parser';
 import {importHandler} from './#/import-handler';
 import {UploadFile} from './components/components';
 import {ImportSummaryTable} from './components/components';
+import {trackerDataHandler} from './#/trackerdata-handler';
 
 var utility = require('./utility-functions');
 import dhis2API from './dhis2API/dhis2API';
@@ -19,13 +21,16 @@ import dhis2API from './dhis2API/dhis2API';
 var api = new dhis2API();
 
 var importSummary = {};
+var importSummaryList = [];
 var requestStats = {
     requestCount : 0,
     successCount : 0,
     errorCount : 0
 };
 
+
 $('document').ready(function(){
+
     ReactDOM.render(<UploadFile onClick={uploadFileHandler}/>, document.getElementById('container'));
 
 });
@@ -45,9 +50,26 @@ function uploadFileHandler(){
         case "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" :
         case "application/vnd.ms-excel" :
             parseExcel(file);
-            break
+            break;
+        case "" :
+            if (file.name.split(".")[1] == "json"){
+                parseJson(file);
+            }
+            
+            break;
         default : alert("Unsupported Format");
             break
+    }
+}
+
+function parseJson(file){
+    var reader = new FileReader();
+    reader.readAsBinaryString(file);
+
+    reader.onload = function(e) {
+        var data = JSON.parse(e.target.result);
+
+        trackerDataHandler(data,notificationCallback);
     }
 }
 
@@ -97,7 +119,7 @@ function notificationCallback(error,response,header,index){
     var importStat = {};
 
     var summaryItem = {};
-    summaryItem.domain = header.domain;
+    summaryItem.domain_key = header.domain_key;
     console.log(response.status );
     var conflicts = api.getConflicts(response);
     var reference = api.findReference(response);
@@ -109,7 +131,7 @@ function notificationCallback(error,response,header,index){
         requestStats.successCount = requestStats.successCount + 1;
     }else{
         if (response.responseText){
-            if (isJson(response.responseText)){
+            if (utility.isJson(response.responseText)){
                 summaryItem.httpResponse = JSON.parse(response.responseText);
                 requestStats.errorCount = requestStats.errorCount+1;
             }
@@ -128,11 +150,11 @@ function notificationCallback(error,response,header,index){
             summaryItem.httpResponse = response;
             requestStats.successCount = requestStats.successCount + 1;
         }
-
     }
 
     if (!importSummary[index]){
         importSummary[index] = [];
+        importSummaryList.push(importSummary[index]);
         // importSummaryMap[importStat.index] = importSummary[importStat.index];
         importSummary[index].push(summaryItem);
     }else{
@@ -140,28 +162,7 @@ function notificationCallback(error,response,header,index){
     }
 
     requestStats.requestCount = requestStats.requestCount+1;
-    ReactDOM.render(<ImportSummaryTable data={importSummary}/>, document.getElementById('dataTable'));
 
-    debugger
+    ReactDOM.render(<ImportSummaryTable data={importSummaryList}/>, document.getElementById('dataTable'));
 
-}
-
-//http://stackoverflow.com/questions/9804777/how-to-test-if-a-string-is-json-or-not
-//http://stackoverflow.com/users/3119662/kubosho
-function isJson(item) {
-    item = typeof item !== "string"
-        ? JSON.stringify(item)
-        : item;
-
-    try {
-        item = JSON.parse(item);
-    } catch (e) {
-        return false;
-    }
-
-    if (typeof item === "object" && item !== null) {
-        return true;
-    }
-
-    return false;
 }

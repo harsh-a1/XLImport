@@ -21,8 +21,9 @@ module.exports = {
         {'./jszip':'jszip'}
     ],
     module: {
-        loaders: [ {
-            test: /\.jsx?$/,
+        loaders: [
+           {
+            test: /\.js$/,
             loader: 'babel',
             exclude: /node_modules/,
 

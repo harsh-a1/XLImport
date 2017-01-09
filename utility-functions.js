@@ -23,4 +23,24 @@ _.prepareMapGroupedById= function(object,id){
     return map;
 }
 
+
+//http://stackoverflow.com/questions/9804777/how-to-test-if-a-string-is-json-or-not
+//http://stackoverflow.com/users/3119662/kubosho
+_.isJson = function(item) {
+    item = typeof item !== "string"
+        ? JSON.stringify(item)
+        : item;
+
+    try {
+        item = JSON.parse(item);
+    } catch (e) {
+        return false;
+    }
+
+    if (typeof item === "object" && item !== null) {
+        return true;
+    }
+
+    return false;
+}
 module.exports = _;

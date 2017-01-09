@@ -38,14 +38,6 @@ export var schemas_extended = {
                 simple: true,
                 writable: true
             },
-            created: {
-                collection: false,
-                fieldName: "created",
-                propertyType: "DATE",
-                required: false,
-                simple: true,
-                writable: true
-            },
             organisationUnit: {
                 collection: false,
                 fieldName: "organisationUnit",

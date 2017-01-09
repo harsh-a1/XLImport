@@ -122,6 +122,38 @@ APIx.dhis2API = function(){
         return schemaNameToObjectMap[domain].apiEndpoint;
     }
 
+    this.getEventByDV = function(args,deuid,value,teiuid,ouuid,psuid){
+
+        ajax.request({
+            type: "GET",
+            async: true,
+            contentType: "application/json",
+            url: "../../events?"+'ou='+ouuid+'&ouMode=SELECTED&programStage='+psuid+'&trackedEntityInstance='+teiuid
+        },callback);
+
+        function callback(error,response){
+            if (error){
+                args.then(error,response);
+            }else{
+                var events = response.events;
+                var filteredEvents = [];
+                for (var key in events){
+                    var dvs = events[key].dataValues;
+
+                    for (var i=0;i<dvs.length;i++){
+                        if (dvs[i].dataElement == deuid){
+                            if (dvs[i].value == value){
+                                filteredEvents.push(events[key]);
+                                break;
+                            }
+                        }
+                    }
+                }
+
+             args.then(null,filteredEvents);
+            }
+        }
+    }
     this.getTEIByAttr = function(args,attruid,value){
         ajax.request({
             type: "GET",
@@ -170,7 +202,7 @@ APIx.dhis2API = function(){
 
         if (response.responseText){
 
-            if (!isJson(response.responseText))
+            if (!utility.isJson(response.responseText))
                 return ([{object:"Unexpected Error Occurred",value:response.responseText}]);
 
             var jsonRT = JSON.parse(response.responseText);

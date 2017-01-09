@@ -128,16 +128,26 @@ function tagParser(){
     this.getRetriever = function(){
         return 'tagRetriever';
     }
+
+    this.getHeaderbyField = function(field, headers) {
+        for (var i = 0; i < headers.length; i++) {
+            if (headers[i].field == field) {
+                return headers[i];
+            }
+        }
+        return null;
+    }
 }
 
 function tagRetriever(args,headers,data){
     var obj = {};
     var domainObj;
+    var _errors = [];
 
     retrieve(0,headers);
     function retrieve(key,headers){
         if (key == headers.length){
-            args.afterThat(null,{domain : headers[0].domain,apiObj:obj,domainObj : domainObj});
+            args.afterThat(null,{domain : headers[0].domain,apiObj:obj,domainObj : domainObj ,errors: _errors});
             return;
         }
         var property = headers[key].property;
@@ -145,18 +155,24 @@ function tagRetriever(args,headers,data){
         var dataValue = data[headers[key].key];
 
         modifierOperations({
-            afterThat : extractValues
+            afterThat : extractValues,
+            teiApiObject : args.teiApiObject,
+            programStage : args.programStage
         },property,headers[key],value,dataValue);
 
         function extractValues(error,uid,mObj){
             if (error){
                 console.log("possible lookup error");
+                if (error.type == "eventDataValueLookup"){
+                        _errors.push(error)
+                }
+
             }
 
-            if (uid){
-                value = uid;
-                domainObj = mObj;
-            }
+                if (uid) {
+                    value = uid;
+                    domainObj = mObj;
+                }
 
             if (property.collection){
 
@@ -212,7 +228,45 @@ function tagRetriever(args,headers,data){
         function default_call(error,response,body){
             args.afterThat(error,response,body);
         }
+
         function lookupObj(){
+
+            function callback(error,filteredEvents){
+
+                if (error){
+
+                }else{
+
+                    if (filteredEvents.length == 1){
+                        args.afterThat(null,filteredEvents[0].event,filteredEvents[0]);
+                    }else if (filteredEvents.length ==0){
+                        args.afterThat({
+                                        type : "eventDataValueLookup",
+                                        conflicts : "NoEvent"
+                                        });
+                    }else {
+                        args.afterThat({
+                            type : "eventDataValueLookup",
+                            conflicts : "MultipleEvent"
+                        });
+
+                    }
+                }
+
+
+            }
+            if (header.domain == "event" && header.field == "dataValues"){
+
+                api.getEventByDV({
+                    then : callback
+                },header.args,
+                    dataValue,
+                    args.teiApiObject.trackedEntityInstance,
+                    args.teiApiObject.orgUnit,
+                    args.programStage);
+
+            return;
+            }
 
             switch(property.propertyType){
                 case "REFERENCE" :

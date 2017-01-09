@@ -2,8 +2,8 @@
  * Created by harsh on 21/12/16.
  */
 
-import React from 'react';
-
+import React,{propTypes} from 'react';
+import _ from 'lodash';
 
 export function UploadFile(props){
         return (
@@ -15,28 +15,73 @@ export function UploadFile(props){
             )
 }
 
-export function ImportSummaryTable(props){
+function SummaryTD(props){
+
+}
+function SummaryRow(props){
+
     function getRows(){
         var rows = [];
-        for (var key in props.data){
-            var items = props.data[key];
-            var index=0;
-            for (var key2 in items){debugger
-                var item = items[key2];
-                var domain = item.domain;
-                rows.push( <tr key={key}>
-                    <td key={key+index+"1"}>{domain}</td>
 
-                </tr>)
-                index = index+1;
-            }
-
+        for (var i=0;i<props.data.length;i++){
+            rows.push(
+                <tr key={_.uniqueId("td_")}>
+                    <td key = {_.uniqueId("td_")}>{props.data[i].domain_key}</td>
+                    <td key = {_.uniqueId("td_")}>{props.data[i].status}</td>
+                    <td key = {_.uniqueId("td_")}>{props.data[i].httpResponse?props.data[i].httpResponse.message:""}</td>
+                    <ConflictsTD data={props.data[i].conflicts}></ConflictsTD>
+                    <td key = {_.uniqueId("td_")}>{props.data[i].reference}</td>
+                </tr>            )
         }
         return rows;
     }
+    return(
+       <i key = {_.uniqueId("td_")}>{getRows()}</i>
+    )
+}
+
+function ConflictsTD(props){
+
+    function getConflicts(conflicts){
+        var _conflicts = [];
+
+        for (var i=0;i<conflicts.length;i++){
+            _conflicts.push(<i key = {_.uniqueId("i_")}>{conflicts[i].object} - {conflicts[i].value}</i>)
+        }
+
+        return _conflicts;
+    }
+
+return(
+    <td key={_.uniqueId("i_")}>{getConflicts((props.data))}</td>
+    )
+}
+
+function IndexRow(props){
 
     return(
-    <table >
+        <tr key={_.uniqueId("td_")}>
+            <td key = {_.uniqueId("td_")} rowSpan={props.data.length+2}>{props.data[0].row+2}</td>
+        </tr>
+    )
+}
+export function ImportSummaryTable(props){
+    function getTBodies(){
+        var tbody = [];
+        for (var i=0;i<props.data.length;i++){
+                tbody.push(
+                        <tbody key = {_.uniqueId("td_")} >
+                        <IndexRow key = {_.uniqueId("td_")} data={props.data[i]}></IndexRow>
+                        <SummaryRow key = {_.uniqueId("td_")} data={props.data[i]}></SummaryRow>
+                        </tbody>
+                    )
+
+        }
+        return tbody
+    }
+
+    return(
+    <table className="table-bordered">
         <thead>
         <tr>
             <th>Row</th>
@@ -48,10 +93,7 @@ export function ImportSummaryTable(props){
         </tr>
         </thead>
 
-        <tbody>
-        {getRows()}
-        </tbody>
-
+        {getTBodies()}
     </table>
     )
 }
