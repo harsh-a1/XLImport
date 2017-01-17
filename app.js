@@ -13,6 +13,8 @@ import tagParser from './#/tag-parser';
 import {importHandler} from './#/import-handler';
 import {UploadFile} from './components/components';
 import {ImportSummaryTable} from './components/components';
+import {RequestStats} from './components/components';
+
 import {trackerDataHandler} from './#/trackerdata-handler';
 
 var utility = require('./utility-functions');
@@ -164,5 +166,6 @@ function notificationCallback(error,response,header,index){
     requestStats.requestCount = requestStats.requestCount+1;
 
     ReactDOM.render(<ImportSummaryTable data={importSummaryList}/>, document.getElementById('dataTable'));
+    ReactDOM.render(<RequestStats data={requestStats}/>, document.getElementById('requestStats'));
 
 }

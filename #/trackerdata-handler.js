@@ -21,7 +21,7 @@ export function trackerDataHandler(data,notificationCallback){
             importData(0,data.events,"events",notificationCallback);
         }
 
-        function importData(index,data,endpointName,notificationCallback){debugger
+        function importData(index,data,endpointName,notificationCallback){
             if (index == data.length){
                 importRest(endpointName);
                 return
