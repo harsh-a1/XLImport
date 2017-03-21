@@ -63,7 +63,7 @@ function tagParser(){
                 }
             }
 
-             field = getValidField(domain.name,field);
+            field = getValidField(domain.name,field);
             if (!field){ return null }
 
             return {
@@ -122,13 +122,31 @@ function tagParser(){
             return {name : _field,property : DOMAIN.properties[_field]}
         }
 
-       return false;
+        return false;
     }
 
     this.getRetriever = function(){
         return 'tagRetriever';
     }
 
+    this.defaultRetriever = function(args,headers,data){
+
+          var json = {};
+            for (var i=0;i<headers.length;i++){
+                
+                var field = headers[i]["field"];
+                var value = data[headers[i]["key"]];
+                var domain = getValidDomain(field);
+                if (domain){
+                    json[domain.name] = {};
+                    json[domain.name]["id"] = value
+                }else{
+                    json[field] = value
+                }             
+            }
+        return json;
+
+    }   
     this.getHeaderbyField = function(field, headers) {
         for (var i = 0; i < headers.length; i++) {
             if (headers[i].field == field) {
@@ -138,6 +156,8 @@ function tagParser(){
         return null;
     }
 }
+
+
 
 function tagRetriever(args,headers,data){
     var obj = {};
@@ -164,15 +184,15 @@ function tagRetriever(args,headers,data){
             if (error){
                 console.log("possible lookup error");
                 if (error.type == "eventDataValueLookup"){
-                        _errors.push(error)
+                    _errors.push(error)
                 }
 
             }
 
-                if (uid) {
-                    value = uid;
-                    domainObj = mObj;
-                }
+            if (uid) {
+                value = uid;
+                domainObj = mObj;
+            }
 
             if (property.collection){
 
@@ -187,14 +207,14 @@ function tagRetriever(args,headers,data){
 
             }else{
                 switch(property.propertyType){
-                    case "REFERENCE" :
-                    default :
-                        if (property.apiAlias){
-                            obj[property.apiAlias] = value;
-                        }else{
-                            obj[property.fieldName] = value;
-                        }
-                        break;
+                case "REFERENCE" :
+                default :
+                    if (property.apiAlias){
+                        obj[property.apiAlias] = value;
+                    }else{
+                        obj[property.fieldName] = value;
+                    }
+                    break;
                 }
             }
 
@@ -241,9 +261,9 @@ function tagRetriever(args,headers,data){
                         args.afterThat(null,filteredEvents[0].event,filteredEvents[0]);
                     }else if (filteredEvents.length ==0){
                         args.afterThat({
-                                        type : "eventDataValueLookup",
-                                        conflicts : "NoEvent"
-                                        });
+                            type : "eventDataValueLookup",
+                            conflicts : "NoEvent"
+                        });
                     }else {
                         args.afterThat({
                             type : "eventDataValueLookup",
@@ -260,27 +280,27 @@ function tagRetriever(args,headers,data){
                 api.getEventByDV({
                     then : callback
                 },header.args,
-                    dataValue,
-                    args.teiApiObject.trackedEntityInstance,
-                    args.teiApiObject.orgUnit,
-                    args.programStage);
+                                 dataValue,
+                                 args.teiApiObject.trackedEntityInstance,
+                                 args.teiApiObject.orgUnit,
+                                 args.programStage);
 
-            return;
+                return;
             }
 
             switch(property.propertyType){
-                case "REFERENCE" :
-                    api.getObjByField({
+            case "REFERENCE" :
+                api.getObjByField({
                     afterThat : args.afterThat
                 },header.field,modifierArgs,value);
-                    break;
-                case "CUSTOM_TEIATTR" :
-                    api.getTEIByAttr({
-                        afterThat : args.afterThat
-                    },value,dataValue);
-                    break;
-                default :
-                    args.afterThat(null,null,null);
+                break;
+            case "CUSTOM_TEIATTR" :
+                api.getTEIByAttr({
+                    afterThat : args.afterThat
+                },value,dataValue);
+                break;
+            default :
+                args.afterThat(null,null,null);
             }
 
         }

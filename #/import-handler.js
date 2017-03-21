@@ -12,8 +12,8 @@ export function importHandler(importable_obj,data,notificationCallback){
     var parser = new tagParser();
     var import_cases = assembleImportCases();
 
-    singleSheetImport(import_cases._single_sheet);
-    defaultImport(import_cases._default);
+   // singleSheetImport(import_cases._single_sheet);
+    defaultImport(import_cases._default,data);
 
     function assembleImportCases(){
         var importMap = {
@@ -38,7 +38,7 @@ export function importHandler(importable_obj,data,notificationCallback){
                     importMap._single_sheet[domain_obj[0].domain].push(domain_obj);
                 }
             }else{
-                importMap._default[key] = domain_obj;
+                importMap._default.push( domain_obj);
             }
         }
        return importMap;
@@ -220,15 +220,32 @@ export function importHandler(importable_obj,data,notificationCallback){
                     api.save(response.domain,response.apiObj,callback.bind(thiz));
                 }
             }
+
             function callback(error,response,body){
                 notificationCallback(error,response,header,args.index);
                 args.teiCallback(error,response,body,args);
-
             }
         }
     }
 
-    function defaultImport(domains){
+    function defaultImport(domainWiseHeaders,data){
+        
+        importObject(0,domainWiseHeaders[0],data[0]);
+        function importObject(index,headers,data){
 
+        //make json api object            
+            var json = parser.defaultRetriever({},headers,data);
+
+            api.save("dataElement",json,callback.bind(this));
+            function callback(error,response,body){
+                notificationCallback(error,response,header,index);
+
+            debugger
+
+
+            }
+        }
+
+debugger
     }
 }

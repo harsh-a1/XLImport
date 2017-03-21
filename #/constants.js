@@ -14,7 +14,8 @@ export const THIRD_DELIMITER = ".";
 export const ALIAS_DOMAINS = {
     ev: "event",
     tei : "trackedEntityInstance",
-    en : "enrollment"
+    en : "enrollment",
+    de : "dataElement"
 };
 
 export const ALIAS_FIELDS = {

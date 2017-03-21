@@ -8,7 +8,7 @@ import _ from 'lodash';
 export function UploadFile(props){
         return (
                 <div>
-                    <label>Upload .json file</label>
+                    <label>Upload .xlsx/csv file</label>
                     <input type="file" id="fileInput"/>
                     <button onClick={props.onClick}>Import</button>
                 </div>
